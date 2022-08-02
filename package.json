@@ -1,0 +1,20 @@
+{
+  "name": "@verto/component",
+  "version": "0.0.1",
+  "author": "Tate Berenbaum<tate@verto.exchange>",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node ./build.js",
+    "fmt": "prettier --write ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.51",
+    "prettier": "^2.7.1"
+  },
+  "dependencies": {
+    "smartweave": "^0.4.49"
+  },
+  "type": "module"
+}
