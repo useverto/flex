@@ -1,5 +1,7 @@
 import { OrderInterface, TagsArray } from "./faces";
 
+export const feeWallet = "SMft-XozLyxl0ztM-gPSYKvlZVCBiiftNIb4kGFI7wg";
+
 /**
  * Ensures that the interaction tx is a valid transfer transaction
  *

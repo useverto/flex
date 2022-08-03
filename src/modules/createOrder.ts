@@ -6,7 +6,7 @@ import {
   ForeignCallInterface,
   MatchLogs,
 } from "../faces";
-import { ensureValidTransfer, isAddress } from "../utils";
+import { ensureValidTransfer, isAddress, feeWallet } from "../utils";
 import Transaction from "arweave/node/lib/transaction";
 
 export const CreateOrder = async (
@@ -352,7 +352,18 @@ export default function matchOrder(
           input: {
             function: "transfer",
             target: currentOrder.creator,
-            qty: remainingQuantity,
+            qty: Math.round(remainingQuantity * 0.98),
+          },
+        });
+
+        // send fee
+        foreignCalls.push({
+          txID: SmartWeave.transaction.id,
+          contract: input.pair.from,
+          input: {
+            function: "transfer",
+            target: feeWallet,
+            qty: Math.round(remainingQuantity * 0.02),
           },
         });
       }
@@ -385,7 +396,18 @@ export default function matchOrder(
         input: {
           function: "transfer",
           target: currentOrder.creator,
-          qty: sendAmount,
+          qty: Math.round(sendAmount * 0.98),
+        },
+      });
+
+      // send fee
+      foreignCalls.push({
+        txID: SmartWeave.transaction.id,
+        contract: input.pair.from,
+        input: {
+          function: "transfer",
+          target: feeWallet,
+          qty: Math.round(sendAmount * 0.02),
         },
       });
 
@@ -455,7 +477,18 @@ export default function matchOrder(
     input: {
       function: "transfer",
       target: input.creator,
-      qty: receiveAmount,
+      qty: Math.round(receiveAmount * 0.98),
+    },
+  });
+
+  // send fee
+  foreignCalls.push({
+    txID: SmartWeave.transaction.id,
+    contract: input.pair.to,
+    input: {
+      function: "transfer",
+      target: feeWallet,
+      qty: Math.round(receiveAmount * 0.02),
     },
   });
 

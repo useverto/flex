@@ -42,6 +42,7 @@ Your SmartWeave contract state MUST contain the following variables in order for
 This library implements the core functions necessary to give SmartWeave contracts the ability to manage a central limit order book.
 
 ### Import
+
 To use the library, you'll need to import its functions
 
 ```ts
@@ -56,7 +57,7 @@ import {
   CancelOrder,
   CreateOrder,
   Halt,
-  ReadOutbox
+  ReadOutbox,
 } from "@verto/component";
 ```
 
@@ -65,4 +66,3 @@ import {
 ```ts
 const newState = await AddPair(state, action);
 ```
-

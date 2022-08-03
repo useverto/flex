@@ -21,7 +21,5 @@
     "arweave": "^1.11.4",
     "smartweave": "^0.4.49"
   },
-  "peerDependencies": {
-    
-  }
+  "peerDependencies": {}
 }
