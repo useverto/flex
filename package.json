@@ -1,6 +1,6 @@
 {
   "name": "@verto/component",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "author": "Tate Berenbaum<tate@verto.exchange>",
   "files": [
     "dist"

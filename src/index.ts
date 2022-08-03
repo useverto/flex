@@ -4,4 +4,4 @@ import { CreateOrder } from "./modules/createOrder";
 import { Halt } from "./modules/halt";
 import { ReadOutbox } from "./modules/readOutbox";
 
-export default { AddPair, CancelOrder, CreateOrder, Halt, ReadOutbox };
+module.exports = { AddPair, CancelOrder, CreateOrder, Halt, ReadOutbox };
