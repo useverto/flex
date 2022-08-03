@@ -1,6 +1,6 @@
 {
   "name": "@verto/component",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "author": "Tate Berenbaum<tate@verto.exchange>",
   "files": [
     "dist"
@@ -10,7 +10,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "node ./build.js",
-    "fmt": "prettier --write ."    
+    "fmt": "prettier --write ."
   },
   "devDependencies": {
     "esbuild": "^0.14.51",
