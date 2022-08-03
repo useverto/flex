@@ -22,6 +22,21 @@ or
 yarn add @verto/component
 ```
 
+## Prerequisites
+
+Your SmartWeave contract state MUST contain the following variables in order for the Verto Components to function properly:
+
+```js
+{
+  emergencyHaltWallet: "",
+  halted: false,
+  pairs: [],
+  usedTransfers: [],
+  invocations: [],
+  foreignCalls: []
+}
+```
+
 ## Usage
 
 This library implements the core functions necessary to give SmartWeave contracts the ability to manage a central limit order book.
