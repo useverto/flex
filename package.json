@@ -1,7 +1,16 @@
 {
   "name": "@verto/component",
-  "version": "0.0.7",
-  "author": "Tate Berenbaum<tate@verto.exchange>",
+  "description": "An embeddable Verto CLOB component",
+  "version": "0.1.0",
+  "author": " ",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/useverto/component.git"
+  },
+  "homepage": "https://github.com/useverto/component",
+  "bugs": {
+    "url": "https://github.com/useverto/component/issues"
+  },
   "files": [
     "dist"
   ],
