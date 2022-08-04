@@ -11,6 +11,7 @@ export interface StateInterface {
   usedTransfers: string[]; // list of transfers that have already been used by an order
   invocations: string[];
   foreignCalls: ForeignCallInterface[];
+  balances?: { [address: string]: number };
 }
 
 export interface ActionInterface {

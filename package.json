@@ -1,7 +1,7 @@
 {
   "name": "@verto/component",
   "description": "An embeddable Verto CLOB component",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": " ",
   "repository": {
     "type": "git",

@@ -30,7 +30,7 @@ export const CreateOrder = async (
   // test that pairs are valid contract strings
   ContractAssert(
     isAddress(usedPair[0]) && isAddress(usedPair[1]),
-    "One of two supplied pairs is invalid"
+    "One of two supplied pair tokens is invalid"
   );
 
   // validate price for limit orders
@@ -88,16 +88,27 @@ export const CreateOrder = async (
   /**
    * Refund the order, if it is invalid
    */
-  const refundTransfer = () =>
-    state.foreignCalls.push({
-      txID: SmartWeave.transaction.id,
-      contract: contractID,
-      input: {
-        function: "transfer",
-        target: caller,
-        qty: contractInput.qty,
-      },
-    });
+  const refundTransfer = () => {
+    if (contractID === SmartWeave.contract.id) {
+      // No need to make a foreign call because the token is governed by this contract
+      state.balances[SmartWeave.contract.id] -= contractInput.qty;
+      if (caller in state.balances) {
+        state.balances[caller] += contractInput.qty;
+      } else {
+        state.balances[caller] = contractInput.qty;
+      }
+    } else {
+      state.foreignCalls.push({
+        txID: SmartWeave.transaction.id,
+        contract: contractID,
+        input: {
+          function: "transfer",
+          target: caller,
+          qty: contractInput.qty,
+        },
+      });
+    }
+  };
 
   // check if the right token is used
   // the first token in the pair has to
@@ -153,7 +164,6 @@ export const CreateOrder = async (
   const dominantToken = state.pairs[pairIndex].pair[0];
 
   try {
-    // TODO: fees (state.protocolFeePercent)
     // try invoking the match function
     const { orderbook, foreignCalls, matches } = matchOrder(
       {
@@ -202,7 +212,19 @@ export const CreateOrder = async (
 
     // Update foreignCalls accordingly for tokens to be sent
     for (let i = 0; i < foreignCalls.length; i++) {
-      state.foreignCalls.push(foreignCalls[i]);
+      if (foreignCalls[i].contract === SmartWeave.contract.id) {
+        // No need to make a foreign call because the token is governed by this contract
+        state.balances[SmartWeave.contract.id] -= foreignCalls[i].input.qty;
+        if (foreignCalls[i].input.target in state.balances) {
+          state.balances[foreignCalls[i].input.target] +=
+            foreignCalls[i].input.qty;
+        } else {
+          state.balances[foreignCalls[i].input.target] =
+            foreignCalls[i].input.qty;
+        }
+      } else {
+        state.foreignCalls.push(foreignCalls[i]);
+      }
     }
 
     state.usedTransfers.push(tokenTx);
