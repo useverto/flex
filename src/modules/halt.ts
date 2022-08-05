@@ -4,7 +4,8 @@ export const Halt = (
   state: StateInterface,
   action: ActionInterface
 ): {
-  state: StateInterface; result: {
+  state: StateInterface;
+  result: {
     status: "success" | "failure";
     message: string;
   };
@@ -19,10 +20,11 @@ export const Halt = (
 
   state.halted = !state.halted;
 
-  return { 
+  return {
     state,
     result: {
       status: "success",
-      message: "Successfully toggled Verto Flex halting"
-    }};
+      message: "Successfully toggled Verto Flex halting",
+    },
+  };
 };

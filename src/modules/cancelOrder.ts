@@ -9,7 +9,8 @@ export const CancelOrder = async (
   state: StateInterface,
   action: ActionInterface
 ): Promise<{
-  state: StateInterface; result: {
+  state: StateInterface;
+  result: {
     status: "success" | "failure";
     message: string;
   };
@@ -60,8 +61,7 @@ export const CancelOrder = async (
     state,
     result: {
       status: "success",
-      message:
-        "Order cancelled successfully",
+      message: "Order cancelled successfully",
     },
   };
 };

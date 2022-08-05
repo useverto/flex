@@ -1,15 +1,15 @@
 {
-  "name": "@verto/component",
-  "description": "An embeddable Verto CLOB component",
-  "version": "0.1.1",
+  "name": "@verto/flex",
+  "description": "An embeddable, programmable order book framework",
+  "version": "0.1.0",
   "author": " ",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/useverto/component.git"
+    "url": "git+https://github.com/useverto/flex.git"
   },
-  "homepage": "https://github.com/useverto/component",
+  "homepage": "https://github.com/useverto/flex",
   "bugs": {
-    "url": "https://github.com/useverto/component/issues"
+    "url": "https://github.com/useverto/flex/issues"
   },
   "files": [
     "dist"

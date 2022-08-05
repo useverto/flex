@@ -5,7 +5,8 @@ export const AddPair = async (
   state: StateInterface,
   action: ActionInterface
 ): Promise<{
-  state: StateInterface; result: {
+  state: StateInterface;
+  result: {
     status: "success" | "failure";
     message: string;
   };
@@ -84,8 +85,7 @@ export const AddPair = async (
     state,
     result: {
       status: "success",
-      message:
-        "Pair added successfully",
+      message: "Pair added successfully",
     },
   };
 };
