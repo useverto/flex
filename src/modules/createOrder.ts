@@ -42,6 +42,7 @@ export const CreateOrder = async (
       price === undefined || price === null || price > 0,
       "Price must be greater than 0"
     );
+    ContractAssert(Number.isInteger(price), "Price must be an integer");
   }
 
   // id of the transferred token
@@ -89,6 +90,8 @@ export const CreateOrder = async (
 
   // Test tokenTx for valid contract interaction
   await ensureValidTransfer(contractID, tokenTx, caller);
+
+  ContractAssert(Number.isInteger(contractInput.qty), "Qty must be an integer");
 
   /**
    * Refund the order, if it is invalid
