@@ -312,7 +312,7 @@ export default function matchOrder(
       creator: input.creator,
       token: input.pair.from,
       price: input.price,
-      quantity: input.quantity,
+      quantity: Math.round(input.quantity),
       originalQuantity: input.quantity,
     });
 
@@ -482,7 +482,7 @@ export default function matchOrder(
         creator: input.creator,
         token: input.pair.from,
         price: input.price,
-        quantity: remainingQuantity,
+        quantity: Math.round(remainingQuantity),
         originalQuantity: input.quantity,
       });
     } else {
