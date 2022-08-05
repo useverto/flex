@@ -4,7 +4,12 @@ import { getContractID } from "../utils";
 export const AddPair = async (
   state: StateInterface,
   action: ActionInterface
-): Promise<StateInterface> => {
+): Promise<{
+  state: StateInterface; result: {
+    status: "success" | "failure";
+    message: string;
+  };
+}> => {
   const caller = action.caller;
   const input: AddPairInterface = action.input;
 
@@ -75,5 +80,12 @@ export const AddPair = async (
     orders: [],
   });
 
-  return state;
+  return {
+    state,
+    result: {
+      status: "success",
+      message:
+        "Pair added successfully",
+    },
+  };
 };

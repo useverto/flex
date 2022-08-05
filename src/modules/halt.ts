@@ -3,7 +3,12 @@ import { ActionInterface, StateInterface } from "../faces";
 export const Halt = (
   state: StateInterface,
   action: ActionInterface
-): StateInterface => {
+): {
+  state: StateInterface; result: {
+    status: "success" | "failure";
+    message: string;
+  };
+} => {
   const caller = action.caller;
 
   // Ensure that only the emergency wallet has access to this function
@@ -12,5 +17,12 @@ export const Halt = (
     "Caller cannot halt or resume the protocol"
   );
 
-  return { ...state, halted: !state.halted };
+  state.halted = !state.halted;
+
+  return { 
+    state,
+    result: {
+      status: "success",
+      message: "Successfully toggled Verto Flex halting"
+    }};
 };

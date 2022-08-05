@@ -8,7 +8,12 @@ import { isAddress } from "../utils";
 export const CancelOrder = async (
   state: StateInterface,
   action: ActionInterface
-): Promise<StateInterface> => {
+): Promise<{
+  state: StateInterface; result: {
+    status: "success" | "failure";
+    message: string;
+  };
+}> => {
   const caller = action.caller;
   const input: CancelOrderInterface = action.input;
 
@@ -51,5 +56,12 @@ export const CancelOrder = async (
   // Remove cancelled order
   acitvePair.orders = acitvePair.orders.filter(({ id }) => id !== orderTxID);
 
-  return state;
+  return {
+    state,
+    result: {
+      status: "success",
+      message:
+        "Order cancelled successfully",
+    },
+  };
 };
