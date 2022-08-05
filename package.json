@@ -1,7 +1,7 @@
 {
   "name": "@verto/flex",
   "description": "An embeddable, programmable order book framework",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": " ",
   "repository": {
     "type": "git",
@@ -11,6 +11,7 @@
   "bugs": {
     "url": "https://github.com/useverto/flex/issues"
   },
+  "license": "https://github.com/useverto/flex/blob/main/LICENSE",
   "files": [
     "dist"
   ],
