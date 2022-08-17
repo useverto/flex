@@ -39,6 +39,16 @@ Your SmartWeave contract state MUST contain the following variables in order for
 
 This framework includes the core functions necessary to give SmartWeave contracts the ability to embed and manage a central limit order book.
 
+## Functions
+
+```ts
+	addPair
+	createOrder
+	cancelOrder
+	readOutbox
+	halt
+```
+
 ### Import
 
 To use the library, you'll need to import its functions
