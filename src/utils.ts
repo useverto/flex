@@ -60,6 +60,23 @@ export const ensureValidTransfer = async (
   }
 };
 
+export const claimBalance = async (
+  tokenID: string,
+  transferTx: string,
+  caller: string
+) => {
+  // Test tokenTx for valid contract interaction
+  // await ensureValidInteraction(tokenID, transferTx);
+
+  // Use Warp internalWrite to call the `claim` function of contract
+  // @ts-expect-error
+  const result = await SmartWeave.contracts.write(tokenID, { function: 'claim', txID: transferTx });
+  // Check that it succeeded
+  if (result.type !== "ok") {
+    throw new ContractError(`Unable to make claim with txID: ${transferTx}`)
+  }
+};
+
 /**
  * Ensures that the interaction is valid
  *
