@@ -16,11 +16,18 @@ npm install @verto/flex
 
 or
 
-```sh
+```
 yarn add @verto/flex
 ```
 
 ## Prerequisites
+
+Install the [ArConnect](https://www.arconnect.io/) browser extension
+
+Install ArLocal to test your smart contract locally
+```
+npx arlocal
+```
 
 Your SmartWeave contract state MUST contain the following variables in order for the Verto Components to function properly:
 
@@ -34,20 +41,11 @@ Your SmartWeave contract state MUST contain the following variables in order for
   foreignCalls: []
 }
 ```
+The state is stored in a JSON file
 
 ## Usage
 
 This framework includes the core functions necessary to give SmartWeave contracts the ability to embed and manage a central limit order book.
-
-## Functions
-
-```ts
-	addPair
-	createOrder
-	cancelOrder
-	readOutbox
-	halt
-```
 
 ### Import
 
@@ -67,4 +65,22 @@ import {
 
 ```ts
 const { newState, result } = await AddPair(state, action);
+```
+
+### Cancel Order
+
+```ts
+const { newState, result } = await cancelOrder(state, action);
+```
+
+### Create Order
+
+```ts
+const { newState, result } = await cancelOrder(state, action);
+```
+
+### Halt
+
+```ts
+const { newState, result } = await halt(state, action);
 ```
