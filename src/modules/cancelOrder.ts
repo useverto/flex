@@ -40,11 +40,17 @@ export const CancelOrder = async (
 
   // Send back the *not* filled tokens to the creator of the order
   // @ts-expect-error
-  const result = await SmartWeave.contracts.write(order.token, { function: 'transfer', target: caller, qty: order.quantity });
+  const result = await SmartWeave.contracts.write(order.token, {
+    function: "transfer",
+    target: caller,
+    qty: order.quantity,
+  });
 
   // Check that it succeeded
   if (result.type !== "ok") {
-    throw new ContractError(`Unable to make claim with txID: ${SmartWeave.transaction.id}`)
+    throw new ContractError(
+      `Unable to make claim with txID: ${SmartWeave.transaction.id}`
+    );
   }
 
   // The pair that the order belongs to
