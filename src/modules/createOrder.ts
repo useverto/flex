@@ -7,7 +7,6 @@ import {
   MatchLogs,
 } from "../faces";
 import { isAddress, feeWallet, claimBalance } from "../utils";
-import Transaction from "arweave/node/lib/transaction";
 
 export const CreateOrder = async (
   state: StateInterface,
@@ -68,7 +67,7 @@ export const CreateOrder = async (
   /**
    * Refund the order, if it is invalid
    */
-  const refundTransfer = () => {
+  const refundTransfer = async () => {
     if (contractID === SmartWeave.contract.id) {
       // No need to make a foreign call because the token is governed by this contract
       state.balances[SmartWeave.contract.id] -= qty;
@@ -103,7 +102,7 @@ export const CreateOrder = async (
 
   if (fromToken !== contractID) {
     // send back the funds that the user sent to this contract
-    refundTransfer();
+    await refundTransfer();
 
     // return state with the refund foreign call
     // and the error message
@@ -117,15 +116,21 @@ export const CreateOrder = async (
     };
   }
 
+  let pairIndex = -1;
   // find the pair index
-  const pairIndex = pairs.findIndex(
-    ({ pair }) => pair.includes(usedPair[0]) && pair.includes(usedPair[1])
-  );
+  for (let i = 0; i < pairs.length; i++) {
+    if (
+      (pairs[i].pair[0] === usedPair[0] && pairs[i].pair[1] === usedPair[1]) ||
+      (pairs[i].pair[0] === usedPair[1] && pairs[i].pair[1] === usedPair[0])
+    ) {
+      pairIndex = i;
+    }
+  }
 
   // test if the pair already exists
   if (pairIndex === -1) {
     // send back the funds
-    refundTransfer();
+    await refundTransfer();
 
     // return state with the refund foreign call
     // and the error message
@@ -139,9 +144,12 @@ export const CreateOrder = async (
   }
 
   // Sort orderbook based on prices
-  const sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
-    a.price > b.price ? 1 : -1
-  );
+  let sortedOrderbook
+  if (state.pairs[pairIndex].orders.length > 0) {
+      sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
+      a.price > b.price ? 1 : -1
+    );
+  }
 
   // get the dominant token from the pair
   // it should always be the first one
@@ -207,7 +215,6 @@ export const CreateOrder = async (
             foreignCalls[i].input.qty;
         }
       } else {
-        state.foreignCalls.push(foreignCalls[i]);
         // @ts-expect-error
         const result = await SmartWeave.contracts.write(
           foreignCalls[i].contract,
@@ -234,7 +241,7 @@ export const CreateOrder = async (
     };
   } catch (e) {
     // if the match function throws an error, refund the transfer
-    refundTransfer();
+    await refundTransfer();
 
     // return state with the refund foreign call
     // and the error message
