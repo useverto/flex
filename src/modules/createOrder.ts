@@ -149,6 +149,8 @@ export const CreateOrder = async (
       sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
       a.price > b.price ? 1 : -1
     );
+  } else {
+    sortedOrderbook = [];
   }
 
   // get the dominant token from the pair
