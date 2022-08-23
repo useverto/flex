@@ -23,9 +23,9 @@ export const CreateOrder = async (
 
   const pairs = state.pairs;
   const usedPair = input.pair;
-  const tokenTx = input.transaction;
   const qty = input.qty;
   const price = input.price;
+  let tokenTx = input.transaction;
 
   // test that pairs are valid contract strings
   ContractAssert(
@@ -51,18 +51,42 @@ export const CreateOrder = async (
     ContractAssert(Number.isInteger(price), "Price must be an integer");
   }
 
-  // id of the transferred token
-  let contractID = "";
-  if (usedPair[0] === SmartWeave.contract.id) {
-    contractID = usedPair[1];
-  } else {
-    contractID = usedPair[0];
+  if (!Number.isInteger(qty) || qty === undefined) {
+    throw new ContractError("Invalid value for quantity. Must be an integer.");
   }
 
-  ContractAssert(Number.isInteger(qty), "Qty must be an integer");
+  // ID of the transferred token is always first in pair
+  let contractID = usedPair[0];
 
-  // Claim tokens from other contract
-  await claimBalance(contractID, tokenTx, qty);
+  if (contractID === SmartWeave.contract.id) {
+    // Set the tokenTx to be internal
+    tokenTx = "INTERNAL_TRANSFER";
+
+    // Transfer assets to the contract
+    if (qty <= 0 || caller === SmartWeave.contract.id) {
+      throw new ContractError("Invalid token transfer.");
+    }
+    if (state.balances[caller] < qty) {
+      throw new ContractError(
+        "Caller balance not high enough to send " + qty + " token(s)."
+      );
+    }
+
+    state.balances[caller] -= qty;
+    if (SmartWeave.contract.id in state.balances) {
+      state.balances[SmartWeave.contract.id] += qty;
+    } else {
+      state.balances[SmartWeave.contract.id] = qty;
+    }
+  } else {
+    if (tokenTx === undefined || tokenTx === null) {
+      throw new ContractError(
+        "No token transaction provided given the token in the order is from a different contract"
+      );
+    }
+    // Claim tokens from other contract
+    await claimBalance(contractID, tokenTx, qty);
+  }
 
   /**
    * Refund the order, if it is invalid
@@ -93,29 +117,6 @@ export const CreateOrder = async (
     }
   };
 
-  // check if the right token is used
-  // the first token in the pair has to
-  // be the token the user is selling,
-  // the second token in the pair has to
-  // be the token the user is buying
-  const fromToken = usedPair[0];
-
-  if (fromToken !== contractID) {
-    // send back the funds that the user sent to this contract
-    await refundTransfer();
-
-    // return state with the refund foreign call
-    // and the error message
-    return {
-      state,
-      result: {
-        status: "failure",
-        message:
-          "Invalid transfer transaction, using the wrong token. The transferred token has to be the first item in the pair",
-      },
-    };
-  }
-
   let pairIndex = -1;
   // find the pair index
   for (let i = 0; i < pairs.length; i++) {
@@ -144,9 +145,9 @@ export const CreateOrder = async (
   }
 
   // Sort orderbook based on prices
-  let sortedOrderbook
+  let sortedOrderbook;
   if (state.pairs[pairIndex].orders.length > 0) {
-      sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
+    sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
       a.price > b.price ? 1 : -1
     );
   } else {
