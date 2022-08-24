@@ -8,6 +8,10 @@
   </p>
 </p>
 
+## Disclaimer
+
+Flex requires Warp for evaluation because of internalWrites
+
 ## Installation
 
 ```sh
@@ -227,3 +231,8 @@ Install ArLocal to test your smart contract locally
 ```
 npx arlocal
 ```
+
+Examples are included in the examples folder
+
+Contribution for more example smart contracts are welcome feel free to make PR's
+
