@@ -63,58 +63,6 @@ import {
 
 ### Logic Flow
 
-Note: this is using ArLocal
-
-```ts
-async function flow() {
-  // Create 2 wallets
-  // Give AR balances to both wallets
-  // Create 2 contracts
-  // Add pair to contractB
-  // walletA create order:
-  // Call `allow` on contractA
-  // Call `createOrder` on contractB
-
-  arweave = Arweave.init({
-    host: "localhost",
-    port: 1984,
-    protocol: "http",
-    timeout: 20000,
-    logging: false,
-  });
-
-  const { walletA, walletB } = await generateWallets(arweave);
-
-  console.log(`WALLET A: ${walletA.address} \nWALLET B: ${walletB.address}`);
-  await triggerFaucet(arweave, walletA, walletB);
-  console.log("TRIGGERED FAUCET");
-  const { contractA, contractB } = await deployContracts(
-    arweave,
-    walletA,
-    walletB
-  );
-  console.log(`CONTRACT A: ${contractA}\nCONTRACT B: ${contractB}`);
-  const pairTx = await createPair(arweave, walletA, contractA, contractB);
-  console.log(`INITIALIZED PAIR TX: ${pairTx}`);
-  const allowTx = await allowOrder(arweave, walletA, contractA, contractB);
-  console.log(`MADE ALLOW TX: ${allowTx}`);
-  const orderTx = await makeOrder(
-    arweave,
-    walletA,
-    contractA,
-    contractB,
-    allowTx
-  );
-  console.log(`MADE ORDER TX: ${orderTx}`);
-
-  const res1 = await readState(arweave, contractB);
-  console.log(JSON.stringify(res1, undefined, 2));
-
-  console.log("\n\n\n\n");
-  const res2 = await readState(arweave, contractA);
-  console.log(JSON.stringify(res2, undefined, 2));
-}
-```
 
 ### State Interface/Types
 
@@ -136,6 +84,40 @@ export interface StateInterface {
 }
 ```
 
+### Price Interface/Types
+```ts
+interface PriceDataInterface {
+  // the id of the token from the pair
+  // the price is calculated for
+  // "x something / 1 dominantToken"
+  dominantToken: string;
+  // the block the order was created in
+  block: number;
+  // volume weighted average price, in
+  // "x something / 1 dominantToken"
+  vwap: number;
+  // logs for this order's matches
+  matchLogs: MatchLogs;
+}
+```
+
+### Foreign Call Interface/Types
+```ts
+export interface ForeignCallInterface {
+  txID: string;
+  contract: string;
+  input: InvocationInterface;
+}
+```
+
+### Invocation Interface/Types
+```ts
+export interface InvocationInterface {
+  function: string;
+  \[key: string | number \]: any;
+}
+```
+
 ### Action Interface/Types
 
 ```ts
@@ -145,87 +127,43 @@ export interface ActionInterface {
 }
 ```
 
-### Add a pair
+## How to get started
+
+* create a contract JS/TS file
+* setup an initial state in a `state.json` file
+* import functions from the flex package
+* create a async handle function
 
 ```ts
-const { newState, result } = await AddPair(state, action);
-```
-
-returns: 
-
-```ts
-state: StateInterface;
-  result: {
-    status: "success" | "failure";
-    message: string;
-  };
-```
-
-### Cancel Order
-
-```ts
-const { newState, result } = await cancelOrder(state, action);
-```
-
-returns: 
-
-```ts
- state: StateInterface;
-  result: {
-    status: "success" | "failure";
-    message: string;
-  };
-```
-
-### Create Order
-
-```ts
-const { newState, result } = await cancelOrder(state, action);
-```
-
-returns: 
-
-```ts
- state: StateInterface;
-  result: {
-    status: "success" | "failure";
-    message: string;
-  };
-```
-
-### Halt
-
-```ts
-const { newState, result } = await halt(state, action);
-```
-
-returns: 
-
-```ts
- state: StateInterface;
-  result: {
-    status: "success" | "failure";
-    message: string;
-};
-```
-  
-### Read out box
-
-```ts
-const result = await ReadOutbox(state, action);
+export async function handle(state, action) {
+  if (action.input.function === "addPair") {
+    const result = await AddPair(state, action);
     return { state: result };
+  }
+  //create order creates and order by passing in the state and action
+  if (action.input.function === "createOrder") {
+    const result = await CreateOrder(state, actiåon);
+    return { state: result };
+  }
+  //cancel order creates and order by passing in the state and action
+  if (action.input.function === "cancelOrder") {
+    const result = await CancelOrder(state, action);
+    return { state: result };
+  }
+  if (action.input.function === "readOutbox") {
+    const result = await ReadOutbox(state, action);
+    return { state: result };
+  }
+  if (action.input.function === "halt") {
+    const result = await Halt(state, action);
+    return { state: result };
+  }
+ }
 ```
 
-returns:
-
-```ts
- state: StateInterface;
-```
 
 
 ## Examples
-
-Install the [ArConnect](https://www.arconnect.io/) browser extension
 
 Install ArLocal to test your smart contract locally
 ```
