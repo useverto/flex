@@ -49,7 +49,6 @@ export const CreateOrder = async (
       price === undefined || price === null || price > 0,
       "Price must be greater than 0"
     );
-    ContractAssert(Number.isInteger(price), "Price must be an integer");
   }
 
   if (!Number.isInteger(qty) || qty === undefined) {
