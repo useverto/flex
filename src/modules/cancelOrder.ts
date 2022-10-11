@@ -39,15 +39,29 @@ export const CancelOrder = async (
   );
 
   // Send back the *not* filled tokens to the creator of the order
-  state.foreignCalls.push({
-    txID: SmartWeave.transaction.id,
-    contract: order.token,
-    input: {
+  if (order.token === SmartWeave.contract.id) {
+    // No need to make a foreign call because the token is governed by this contract
+    state.balances[SmartWeave.contract.id] -= order.quantity;
+    if (caller in state.balances) {
+      state.balances[caller] += order.quantity;
+    } else {
+      state.balances[caller] = order.quantity;
+    }
+  } else {
+    // @ts-expect-error
+    const result = await SmartWeave.contracts.write(order.token, {
       function: "transfer",
       target: caller,
       qty: order.quantity,
-    },
-  });
+    });
+
+    // Check that it succeeded
+    if (result.type !== "ok") {
+      throw new ContractError(
+        `Unable to make claim with txID: ${SmartWeave.transaction.id}`
+      );
+    }
+  }
 
   // The pair that the order belongs to
   const acitvePair = state.pairs.find((pair) =>

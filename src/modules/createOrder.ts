@@ -6,8 +6,7 @@ import {
   ForeignCallInterface,
   MatchLogs,
 } from "../faces";
-import { ensureValidTransfer, isAddress, feeWallet } from "../utils";
-import Transaction from "arweave/node/lib/transaction";
+import { isAddress, feeWallet, claimBalance } from "../utils";
 
 export const CreateOrder = async (
   state: StateInterface,
@@ -24,13 +23,21 @@ export const CreateOrder = async (
 
   const pairs = state.pairs;
   const usedPair = input.pair;
-  const tokenTx = input.transaction;
+  const qty = input.qty;
   const price = input.price;
+  let tokenTx = input.transaction;
+  let balances = state.balances;
 
   // test that pairs are valid contract strings
   ContractAssert(
     isAddress(usedPair[0]) && isAddress(usedPair[1]),
     "One of two supplied pair tokens is invalid"
+  );
+
+  ContractAssert(
+    usedPair[0] === SmartWeave.contract.id ||
+      usedPair[1] === SmartWeave.contract.id,
+    "One of the two contracts in the pair isn't the current contract."
   );
 
   // validate price is a number
@@ -45,111 +52,87 @@ export const CreateOrder = async (
     ContractAssert(Number.isInteger(price), "Price must be an integer");
   }
 
-  // id of the transferred token
-  let contractID = "";
-  // transfer interaction input
-  let contractInput: {
-    function: string;
-    [key: string]: any;
-  };
-  // transfer transaction object
-  let transferTx: Transaction;
-
-  // grab the contract id of the token they are transferring in the supplied tx
-  try {
-    transferTx = await SmartWeave.unsafeClient.transactions.get(tokenTx);
-  } catch (err) {
-    throw new ContractError(err);
+  if (!Number.isInteger(qty) || qty === undefined) {
+    throw new ContractError("Invalid value for quantity. Must be an integer.");
   }
 
-  // @ts-expect-error
-  transferTx.get("tags").forEach((tag) => {
-    if (tag.get("name", { decode: true, string: true }) === "Contract") {
-      contractID = tag.get("value", { decode: true, string: true });
+  // ID of the transferred token is always first in pair
+  let contractID = usedPair[0];
+
+  if (contractID === SmartWeave.contract.id) {
+    // Set the tokenTx to be internal
+    tokenTx = "INTERNAL_TRANSFER";
+
+    // Transfer assets to the contract
+    if (qty <= 0 || caller === SmartWeave.contract.id) {
+      throw new ContractError("Invalid token transfer.");
     }
-    if (tag.get("name", { decode: true, string: true }) === "Input") {
-      contractInput = JSON.parse(
-        tag.get("value", { decode: true, string: true })
+    if (balances[caller] < qty) {
+      throw new ContractError(
+        "Caller balance not high enough to send " + qty + " token(s)."
       );
     }
-  });
 
-  ContractAssert(
-    typeof contractID === "string",
-    "Invalid contract ID in transfer: not a string"
-  );
-  ContractAssert(
-    contractID !== "",
-    "No contract ID found in the transfer transaction"
-  );
-  ContractAssert(
-    !state.usedTransfers.includes(tokenTx),
-    "This transfer has already been used for an order"
-  );
-  ContractAssert(isAddress(contractID), "Invalid contract ID format");
-
-  // Test tokenTx for valid contract interaction
-  await ensureValidTransfer(contractID, tokenTx, caller);
-
-  ContractAssert(Number.isInteger(contractInput.qty), "Qty must be an integer");
+    balances[caller] -= qty;
+    if (SmartWeave.contract.id in balances) {
+      balances[SmartWeave.contract.id] += qty;
+    } else {
+      balances[SmartWeave.contract.id] = qty;
+    }
+  } else {
+    if (tokenTx === undefined || tokenTx === null) {
+      throw new ContractError(
+        "No token transaction provided given the token in the order is from a different contract"
+      );
+    }
+    // Claim tokens from other contract
+    await claimBalance(contractID, tokenTx, qty);
+  }
 
   /**
    * Refund the order, if it is invalid
    */
-  const refundTransfer = () => {
+  const refundTransfer = async () => {
     if (contractID === SmartWeave.contract.id) {
       // No need to make a foreign call because the token is governed by this contract
-      state.balances[SmartWeave.contract.id] -= contractInput.qty;
-      if (caller in state.balances) {
-        state.balances[caller] += contractInput.qty;
+      balances[SmartWeave.contract.id] -= qty;
+      if (caller in balances) {
+        balances[caller] += qty;
       } else {
-        state.balances[caller] = contractInput.qty;
+        balances[caller] = qty;
       }
     } else {
-      state.foreignCalls.push({
-        txID: SmartWeave.transaction.id,
-        contract: contractID,
-        input: {
-          function: "transfer",
-          target: caller,
-          qty: contractInput.qty,
-        },
+      // @ts-expect-error
+      const result = await SmartWeave.contracts.write(contractID, {
+        function: "transfer",
+        target: caller,
+        qty,
       });
+
+      // Check that it succeeded
+      if (result.type !== "ok") {
+        throw new ContractError(
+          `Unable to return order with txID: ${SmartWeave.transaction.id}`
+        );
+      }
     }
   };
 
-  // check if the right token is used
-  // the first token in the pair has to
-  // be the token the user is selling,
-  // the second token in the pair has to
-  // be the token the user is buying
-  const fromToken = usedPair[0];
-
-  if (fromToken !== contractID) {
-    // send back the funds that the user sent to this contract
-    refundTransfer();
-
-    // return state with the refund foreign call
-    // and the error message
-    return {
-      state,
-      result: {
-        status: "failure",
-        message:
-          "Invalid transfer transaction, using the wrong token. The transferred token has to be the first item in the pair",
-      },
-    };
-  }
-
+  let pairIndex = -1;
   // find the pair index
-  const pairIndex = pairs.findIndex(
-    ({ pair }) => pair.includes(usedPair[0]) && pair.includes(usedPair[1])
-  );
+  for (let i = 0; i < pairs.length; i++) {
+    if (
+      (pairs[i].pair[0] === usedPair[0] && pairs[i].pair[1] === usedPair[1]) ||
+      (pairs[i].pair[0] === usedPair[1] && pairs[i].pair[1] === usedPair[0])
+    ) {
+      pairIndex = i;
+    }
+  }
 
   // test if the pair already exists
   if (pairIndex === -1) {
     // send back the funds
-    refundTransfer();
+    await refundTransfer();
 
     // return state with the refund foreign call
     // and the error message
@@ -163,9 +146,14 @@ export const CreateOrder = async (
   }
 
   // Sort orderbook based on prices
-  const sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
-    a.price > b.price ? 1 : -1
-  );
+  let sortedOrderbook;
+  if (state.pairs[pairIndex].orders.length > 0) {
+    sortedOrderbook = state.pairs[pairIndex].orders.sort((a, b) =>
+      a.price > b.price ? 1 : -1
+    );
+  } else {
+    sortedOrderbook = [];
+  }
 
   // get the dominant token from the pair
   // it should always be the first one
@@ -180,7 +168,7 @@ export const CreateOrder = async (
           from: contractID,
           to: usedPair.find((val) => val !== contractID),
         },
-        quantity: contractInput.qty,
+        quantity: qty,
         creator: caller,
         transaction: SmartWeave.transaction.id,
         transfer: tokenTx,
@@ -220,22 +208,39 @@ export const CreateOrder = async (
 
     // Update foreignCalls accordingly for tokens to be sent
     for (let i = 0; i < foreignCalls.length; i++) {
+      // Skip making zero balance transfers
+      if (foreignCalls[i].input.qty <= 0) {
+        continue;
+      }
       if (foreignCalls[i].contract === SmartWeave.contract.id) {
         // No need to make a foreign call because the token is governed by this contract
-        state.balances[SmartWeave.contract.id] -= foreignCalls[i].input.qty;
-        if (foreignCalls[i].input.target in state.balances) {
-          state.balances[foreignCalls[i].input.target] +=
+        balances[SmartWeave.contract.id] -= foreignCalls[i].input.qty;
+        if (foreignCalls[i].input.target in balances) {
+          balances[foreignCalls[i].input.target] +=
             foreignCalls[i].input.qty;
         } else {
-          state.balances[foreignCalls[i].input.target] =
+          balances[foreignCalls[i].input.target] =
             foreignCalls[i].input.qty;
         }
       } else {
-        state.foreignCalls.push(foreignCalls[i]);
+        // @ts-expect-error
+        const result = await SmartWeave.contracts.write(
+          foreignCalls[i].contract,
+          foreignCalls[i].input
+        );
+
+        // Check that it succeeded
+        if (result.type !== "ok") {
+          throw new ContractError(
+            `Unable to fill order with txID: ${foreignCalls[i].txID}`
+          );
+        }
       }
     }
 
-    state.usedTransfers.push(tokenTx);
+    if (state.balances) {
+      state.balances = balances;
+    }
 
     return {
       state,
@@ -246,7 +251,7 @@ export const CreateOrder = async (
     };
   } catch (e) {
     // if the match function throws an error, refund the transfer
-    refundTransfer();
+    await refundTransfer();
 
     // return state with the refund foreign call
     // and the error message

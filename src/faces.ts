@@ -26,8 +26,9 @@ export interface AddPairInterface {
 
 export interface CreateOrderInterface {
   function: "createOrder";
-  transaction: string; // Transaction hash from the token transfer to this contract
   pair: [string, string]; // Pair that user is trading between
+  qty: number; // Quantitiy of tokens allowed to this contract for the order
+  transaction?: string; // Transaction hash from the token transfer to this contract
   price?: number; // Price of token being sent (optional)
 }
 
