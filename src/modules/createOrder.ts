@@ -36,7 +36,7 @@ export const CreateOrder = async (
 
   ContractAssert(
     usedPair[0] === SmartWeave.contract.id ||
-      usedPair[1] === SmartWeave.contract.id,
+    usedPair[1] === SmartWeave.contract.id,
     "One of the two contracts in the pair isn't the current contract."
   );
 
@@ -175,7 +175,6 @@ export const CreateOrder = async (
       },
       sortedOrderbook
     );
-
     // Update orderbook accordingly
     state.pairs[pairIndex].orders = orderbook;
 
@@ -192,6 +191,7 @@ export const CreateOrder = async (
           .map(({ qty: volume, price }) => volume * price)
           .reduce((a, b) => a + b, 0) /
         matches.map(({ qty: volume }) => volume).reduce((a, b) => a + b, 0);
+
 
       // update the latest price data
       state.pairs[pairIndex].priceData = {
@@ -251,6 +251,7 @@ export const CreateOrder = async (
   } catch (e) {
     // if the match function throws an error, refund the transfer
     await refundTransfer();
+
 
     // return state with the refund foreign call
     // and the error message
