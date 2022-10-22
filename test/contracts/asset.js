@@ -28,7 +28,7 @@ var claimBalance = (tokenID, transferTx, qty) => __async(void 0, null, function*
     txID: transferTx,
     qty
   });
-  console.log('Claim Result:', JSON.stringify(result))
+  //console.log('Claim Result:', JSON.stringify(result))
   /*
   if (result.type !== "ok") {
     throw new ContractError(`Unable to make claim with txID: ${transferTx}`);
