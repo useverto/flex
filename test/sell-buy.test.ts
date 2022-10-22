@@ -26,8 +26,8 @@ const warp = WarpFactory.forLocal();
 
 
 test('buy and sell asset', async () => {
-  // let arLocal = new ArLocal(1984, false);
-  // await arLocal.start();
+  let arLocal = new ArLocal(1984, false);
+  await arLocal.start();
   // setup - generate contracts and wallets
   const result = await setup()
     .then(mine)
@@ -53,7 +53,7 @@ test('buy and sell asset', async () => {
   assert.equal(result.state.balances['SMft-XozLyxl0ztM-gPSYKvlZVCBiiftNIb4kGFI7wg'], 2)
   assert.ok(true)
   // stop local
-  //await arlocal.stop()
+  await arLocal.stop()
 })
 
 async function readState(ctx) {
