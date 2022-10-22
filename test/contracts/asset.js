@@ -307,6 +307,7 @@ var CreateOrder = (state, action) => __async(void 0, null, function* () {
       }
     };
   } catch (e) {
+    console.log(e)
     yield refundTransfer();
     return {
       state,

@@ -1,25 +1,13 @@
 import { assert, test } from 'vitest'
 import { WarpFactory, LoggerFactory } from 'warp-contracts'
-import Arweave from 'arweave'
 import ArLocal from 'arlocal'
 import fs from 'fs'
-
-const arweave = Arweave.init({
-  host: 'localhost',
-  port: 1984,
-  protocol: 'http'
-})
-
-type Wallet = {
-  address: string;
-  jwk: JWKInterface;
-};
 
 const BAR_SRC = fs.readFileSync('./test/contracts/bar.js', 'utf-8')
 const ASSET_SRC = fs.readFileSync('./test/contracts/asset.js', 'utf-8')
 
 // note: setting global logging level to 'error' to reduce logging.
-LoggerFactory.INST.logLevel("error");
+LoggerFactory.INST.logLevel("fatal");
 
 // the 'forLocal' version uses by default inMemory cache - so no cache files are saved between test runs
 const warp = WarpFactory.forLocal();
