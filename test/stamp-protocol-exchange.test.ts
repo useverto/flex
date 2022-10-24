@@ -10,12 +10,12 @@ const STAMP_SRC = fs.readFileSync('./test/contracts/stamp.js', 'utf-8')
 LoggerFactory.INST.logLevel("fatal");
 
 // the 'forLocal' version uses by default inMemory cache - so no cache files are saved between test runs
-const warp = WarpFactory.forLocal();
+const warp = WarpFactory.forLocal(1994);
 const STAMP = 1e12
 const BAR = 1e6
 
 test('buy and sell stampcoin', async () => {
-  let arLocal = new ArLocal(1984, false);
+  let arLocal = new ArLocal(1994, false);
   await arLocal.start();
   // setup - generate contracts and wallets
   const result = await setup()
